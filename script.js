@@ -1,76 +1,90 @@
-const video    = document.getElementById('video');
-const startBtn = document.getElementById('startBtn');
-const stopBtn  = document.getElementById('stopBtn');
-const statusEl = document.getElementById('status');
-const wrapper  = document.querySelector('.video-wrapper');
+const video = document.getElementById("video");
+const startBtn = document.getElementById("startBtn");
+const stopBtn = document.getElementById("stopBtn");
+const statusEl = document.getElementById("status");
+const wrapper = document.querySelector(".video-wrapper");
+const themeToggle = document.getElementById("themeToggle");
+const yearEl = document.getElementById("year");
 
-let canvas, isDetecting = false;
+let canvas = null;
+let isDetecting = false;
+
+yearEl.textContent = new Date().getFullYear();
 
 async function loadModels() {
-  const MODEL_URL = './models';
-  statusEl.textContent = 'Loading models...';
+  const MODEL_URL = "./models";
+  statusEl.textContent = "Loading models...";
   try {
     await Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
       faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
       faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
       faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
-      faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL)
+      faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
     ]);
-    statusEl.textContent = 'Models loaded.';
+    statusEl.textContent = "Models loaded.";
     startBtn.disabled = false;
-  } catch (e) {
-    console.error('Model loading error:', e);
-    statusEl.textContent = 'Error loading models.';
+  } catch (error) {
+    console.error("Model loading error:", error);
+    statusEl.textContent = "Error loading models.";
   }
 }
 
 async function startDetection() {
   startBtn.disabled = true;
-  stopBtn.disabled  = false;
-  statusEl.textContent = 'Accessing camera...';
+  stopBtn.disabled = false;
+  statusEl.textContent = "Accessing camera...";
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: {} });
     video.srcObject = stream;
-  } catch (err) {
-    console.error('Camera error:', err);
-    statusEl.textContent = 'Error accessing camera.';
+  } catch (error) {
+    console.error("Camera access error:", error);
+    statusEl.textContent = "Error accessing camera.";
     startBtn.disabled = false;
-    stopBtn.disabled  = true;
+    stopBtn.disabled = true;
     return;
   }
 
   video.onloadedmetadata = () => {
     video.play();
 
-    if (canvas) canvas.remove();
+    if (canvas) {
+      canvas.remove();
+      canvas = null;
+    }
     canvas = faceapi.createCanvasFromMedia(video);
     wrapper.appendChild(canvas);
 
-    canvas.width  = video.videoWidth;
+    canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
     faceapi.matchDimensions(canvas, {
       width: video.videoWidth,
-      height: video.videoHeight
+      height: video.videoHeight,
     });
 
     isDetecting = true;
-    statusEl.textContent = 'Detecting...';
+    statusEl.textContent = "Detecting...";
     detectLoop();
   };
 }
 
 function stopDetection() {
   startBtn.disabled = false;
-  stopBtn.disabled  = true;
-  statusEl.textContent = 'Detection stopped.';
+  stopBtn.disabled = true;
+  statusEl.textContent = "Detection stopped.";
   isDetecting = false;
-  if (canvas) canvas.remove();
+
+  if (canvas) {
+    canvas.remove();
+    canvas = null;
+  }
+
   video.pause();
+
   if (video.srcObject) {
-    video.srcObject.getTracks().forEach(t => t.stop());
+    video.srcObject.getTracks().forEach((track) => track.stop());
     video.srcObject = null;
   }
 }
@@ -78,40 +92,67 @@ function stopDetection() {
 async function detectLoop() {
   if (!isDetecting) return;
 
-  const detections = await faceapi
-    .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
-    .withFaceLandmarks()
-    .withFaceExpressions()
-    .withAgeAndGender();
+  try {
+    const detections = await faceapi
+      .detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+      .withFaceLandmarks()
+      .withFaceExpressions()
+      .withAgeAndGender();
 
-  const resized = faceapi.resizeResults(detections, {
-    width: video.videoWidth,
-    height: video.videoHeight
-  });
+    const resizedDetections = faceapi.resizeResults(detections, {
+      width: video.videoWidth,
+      height: video.videoHeight,
+    });
 
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  faceapi.draw.drawDetections(canvas, resized);
-  faceapi.draw.drawFaceLandmarks(canvas, resized);
-  faceapi.draw.drawFaceExpressions(canvas, resized);
+    faceapi.draw.drawDetections(canvas, resizedDetections);
+    faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+    faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
 
-  resized.forEach(face => {
-    const { age, gender, genderProbability } = face;
-    const text = [
-      `${gender} (${(genderProbability * 100).toFixed(0)}%)`,
-      `Age: ${age.toFixed(0)}`
-    ];
-    new faceapi.draw.DrawTextField(
-      text,
-      face.detection.box.bottomRight
-    ).draw(canvas);
-  });
+    resizedDetections.forEach((detection) => {
+      const { age, gender, genderProbability } = detection;
+      const text = [
+        `${gender} (${(genderProbability * 100).toFixed(0)}%)`,
+        `Age: ${age.toFixed(0)}`,
+      ];
+      new faceapi.draw.DrawTextField(
+        text,
+        detection.detection.box.bottomRight
+      ).draw(canvas);
+    });
+  } catch (err) {
+    console.error("Detection error:", err);
+  }
 
   requestAnimationFrame(detectLoop);
 }
 
-startBtn.addEventListener('click', startDetection);
-stopBtn.addEventListener('click', stopDetection);
+function setTheme(theme) {
+  if (theme === "dark") {
+    document.documentElement.setAttribute("data-theme", "dark");
+    themeToggle.textContent = "☀️";
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+    themeToggle.textContent = "🌙";
+  }
+  localStorage.setItem("theme", theme);
+}
+
+const savedTheme = localStorage.getItem("theme") || "light";
+setTheme(savedTheme);
+
+themeToggle.addEventListener("click", () => {
+  const currentTheme = document.documentElement.getAttribute("data-theme");
+  if (currentTheme === "dark") {
+    setTheme("light");
+  } else {
+    setTheme("dark");
+  }
+});
+
+startBtn.addEventListener("click", startDetection);
+stopBtn.addEventListener("click", stopDetection);
 
 loadModels();

@@ -5,12 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Facial Landmarking & Detection</title>
   <link rel="stylesheet" href="styles.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap" rel="stylesheet" />
 </head>
 <body>
   <div class="container">
     <div class="header">
       <h1>Multi Facial Landmarking - Emotion, Age & Gender Detection</h1>
+      <button id="themeToggle" aria-label="Toggle Dark/Light Mode">🌙</button>
     </div>
 
     <div class="video-wrapper">
@@ -23,6 +24,10 @@
     </div>
 
     <div id="status" class="status">Loading models, please wait...</div>
+
+    <footer class="footer">
+      Copyright &copy; <span id="year"></span>. Made with ❤️ by Ashwin Pulipati. All rights reserved.
+    </footer>
   </div>
 
   <script src="face-api.min.js"></script>
