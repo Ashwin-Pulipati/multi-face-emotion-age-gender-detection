@@ -23,7 +23,15 @@
       <button id="stopBtn" class="stop-btn" disabled>Stop</button>
     </div>
 
-    <div id="status" class="status">Loading models, please wait...</div>
+    <div id="status" class="status">
+      <span>Loading models, please wait </span>
+      <l-hourglass
+      size="20"
+      bg-opacity="0.1"
+      speed="1.75"
+      color="#ff0000" 
+    ></l-hourglass>
+  </div>
 
     <footer class="footer">
       Copyright &copy; <span id="year"></span>. Made with ❤️ by Ashwin Pulipati. All rights reserved.
@@ -31,6 +39,7 @@
   </div>
 
   <script src="face-api.min.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/ldrs/dist/auto/metronome.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

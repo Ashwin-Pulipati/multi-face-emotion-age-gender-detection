@@ -13,7 +13,20 @@ yearEl.textContent = new Date().getFullYear();
 
 async function loadModels() {
   const MODEL_URL = "./models";
-  statusEl.textContent = "Loading models...";
+  statusEl.innerHTML = `
+  <div style="
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+  ">
+    <span>Loading models</span>
+    <l-metronome size="20" speed="1.6" color="#ff0000"></l-metronome>
+  </div>
+`;
+
+
   try {
     await Promise.all([
       faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
