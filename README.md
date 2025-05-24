@@ -3,5 +3,5 @@ Detects facial landmarks, classify expressions, and estimate age and gender from
 
 Working:
 
-<img src="./assets/Person.png" alt="Person" width="200" height="200" align="left"/>
+<img src="./assets/Person.png" alt="Person" width="300" height="250" align="left"/>
 <img src="./assets/Person from Phone.png" alt="Taylor Swift" width="300" height="300" align="right"/>
